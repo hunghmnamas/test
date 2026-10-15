@@ -48,13 +48,16 @@
       background: #8c8c8c;
     }
 
-  .background {
+ .background {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* Phủ kín toàn bộ màn hình, tự động tràn viền để không bị khoảng xám */
-      object-position: center;
+      left: 50%;
+      bottom: 0;                /* Neo chặt cạnh dưới xuống đáy màn hình */
+      transform: translateX(-50%);
+      width: 100%;             /* Ép chiều rộng phủ kín màn hình theo chiều ngang */
+      height: 100vh;           /* Hoặc dùng 100dvh để khớp chuẩn di động */
+      height: 100dvh;
+      object-fit: cover;       /* Đảm bảo ảnh phủ kín mà không bị méo */
+      object-position: center bottom; /* Quan trọng: Neo trọng tâm ảnh về phía cạnh dưới */
       pointer-events: none;
     }
 
