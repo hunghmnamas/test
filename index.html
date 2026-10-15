@@ -97,8 +97,8 @@
 
     .toast-wrap {
       position: relative;
-      width: min(82vw, 400px, calc((86dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 1039 / 1338));
-      max-height: calc(86dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      width: min(70vw, 330px, calc((74dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 1039 / 1338));
+      max-height: calc(74dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       aspect-ratio: 1039 / 1338;
       transform: translate3d(0, calc(100% + 32px), 0);
       opacity: 0;
@@ -108,7 +108,7 @@
     }
 
     .toast-visible .toast-wrap {
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0, clamp(-80px, -8dvh, -48px), 0);
       opacity: 1;
     }
 
@@ -187,7 +187,7 @@
 
       .toast-wrap {
         width: auto;
-        height: min(90dvh, 620px);
+        height: min(70dvh, 440px);
         max-height: calc(100dvh - 30px);
       }
     }
