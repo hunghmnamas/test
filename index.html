@@ -59,24 +59,21 @@
       pointer-events: none;
     }
 
-    .toast-wrap {
+   .toast-wrap {
       position: absolute;
       z-index: 2;
       opacity: 0;
-      /* Thu nhỏ lại thêm: giảm scale từ .975 xuống .92 (hoặc nhỏ hơn tùy ý bạn) */
-      transform: scale(.30);
+      transform: scale(.85); /* Thu nhỏ trạng thái ban đầu */
       transform-origin: center;
       will-change: left, top, width, height, opacity, transform;
-      background: transparent;
+      background: transparent; /* Giữ trong suốt để không bị viền đỏ */
       transition: opacity .18s ease-out, transform .18s ease-out;
       pointer-events: none;
     }
 
     .toast-visible .toast-wrap {
-      /* Mờ đi khoảng 3%: giảm độ đậm (opacity) từ 1 xuống còn 0.97 */
-      opacity: 0.70;
-      /* Đồng thời thu nhỏ nhẹ trạng thái hiện thị cuối cùng nếu muốn (ví dụ từ 1 xuống .97) */
-      transform: scale(.97);
+      opacity: 0.97; /* Mờ đi khoảng 3% (giảm từ 1 xuống 0.97) */
+      transform: scale(.90); /* Thu nhỏ kích thước hiển thị */
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
 
@@ -154,10 +151,20 @@
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = (viewportHeight - displayedHeight) / 2;
 
-        toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
-        toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
-        toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
-        toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
+        // === THÊM HỆ SỐ THU NHỎ KHUNG TOAST (Ví dụ: 0.5 là thu nhỏ một nửa) ===
+        var customFactor = 0.5; // Bạn có thể tăng/giảm số này (VD: 0.4 hoặc 0.6) cho vừa ý
+
+        var targetWidth = WHITE_WIDTH * scale * customFactor;
+        var targetHeight = WHITE_HEIGHT * scale * customFactor;
+
+        // Căn chỉnh lại vị trí để khung toast thu nhỏ nằm chính giữa vùng trắng gốc
+        var targetLeft = (offsetX + WHITE_LEFT * scale) + (WHITE_WIDTH * scale - targetWidth) / 2;
+        var targetTop = (offsetY + WHITE_TOP * scale) + (WHITE_HEIGHT * scale - targetHeight) / 2;
+
+        toastWrap.style.left = targetLeft + "px";
+        toastWrap.style.top = targetTop + "px";
+        toastWrap.style.width = targetWidth + "px";
+        toastWrap.style.height = targetHeight + "px";
       }
 
       placeToast();
