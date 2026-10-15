@@ -24,7 +24,6 @@
     html, body {
       width: 100%;
       height: 100%;
-      height: 100dvh;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -53,11 +52,8 @@
       left: 50%;
       bottom: 0;
       transform: translateX(-50%);
-      width: 100%;
-      height: 100dvh;
-      object-fit: cover;
-      object-position: center bottom;
       pointer-events: none;
+      /* Ép kích thước được điều khiển trực tiếp bằng JavaScript bên dưới để phủ kín tuyệt đối iPhone 15 Pro Max */
     }
 
     .toast-wrap {
@@ -73,7 +69,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.95; /* Mờ đi khoảng 5% theo yêu cầu */
+      opacity: 0.95; /* Mờ đi khoảng 5% */
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -121,7 +117,7 @@
 </head>
 <body>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
-    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa">
+    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa" id="bgImg">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
       <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
@@ -141,17 +137,32 @@
 
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
+      var bgImg = document.getElementById("bgImg");
       var understood = document.getElementById("understood");
 
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
+
+        // Tính toán scale phủ kín màn hình (cover)
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
-        var offsetX = (viewportWidth - displayedWidth) / 2;
-        var offsetY = viewportHeight - displayedHeight;
 
+        // Cộng thêm một khoảng an toàn (ví dụ 60px) vào chiều cao ảnh nền 
+        // để đẩy hẳn phần đáy xuống dưới mép màn hình, triệt tiêu hoàn toàn vùng xám trên iOS
+        var forcedHeight = displayedHeight + 60; 
+
+        var offsetX = (viewportWidth - displayedWidth) / 2;
+        var offsetY = viewportHeight - forcedHeight; // Neo sát đáy
+
+        // Gán kích thước trực tiếp cho ảnh nền
+        bgImg.style.width = displayedWidth + "px";
+        bgImg.style.height = forcedHeight + "px";
+        bgImg.style.left = offsetX + "px";
+        bgImg.style.top = offsetY + "px";
+
+        // Định vị vị trí toast tương ứng với tỉ lệ ảnh
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
         toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
@@ -223,4 +234,3 @@
   </script>
 </body>
 </html>
-```[cite: 1]
