@@ -72,7 +72,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.97; /* Mờ đi khoảng 3% (giảm từ 1 xuống 0.97) */
+      opacity: 0.85; /* Mờ đi khoảng 3% (giảm từ 1 xuống 0.97) */
       transform: scale(.90); /* Thu nhỏ kích thước hiển thị */
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -152,7 +152,7 @@
         var offsetY = (viewportHeight - displayedHeight) / 2;
 
         // === THÊM HỆ SỐ THU NHỎ KHUNG TOAST (Ví dụ: 0.5 là thu nhỏ một nửa) ===
-        var customFactor = 0.45; // Bạn có thể tăng/giảm số này (VD: 0.4 hoặc 0.6) cho vừa ý
+        var customFactor = 0.4; // Bạn có thể tăng/giảm số này (VD: 0.4 hoặc 0.6) cho vừa ý
 
         var targetWidth = WHITE_WIDTH * scale * customFactor;
         var targetHeight = WHITE_HEIGHT * scale * customFactor;
