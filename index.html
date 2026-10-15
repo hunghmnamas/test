@@ -50,11 +50,12 @@
 
     .background {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: auto;
+      height: 100%; /* Hoặc chỉnh theo tính toán JavaScript bên dưới */
+      object-fit: contain;
       pointer-events: none;
     }
 
