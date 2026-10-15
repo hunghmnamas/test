@@ -64,7 +64,7 @@
       z-index: 2;
       opacity: 0;
       /* Thu nhỏ lại thêm: giảm scale từ .975 xuống .92 (hoặc nhỏ hơn tùy ý bạn) */
-      transform: scale(.85);
+      transform: scale(.60);
       transform-origin: center;
       will-change: left, top, width, height, opacity, transform;
       background: transparent;
@@ -74,7 +74,7 @@
 
     .toast-visible .toast-wrap {
       /* Mờ đi khoảng 3%: giảm độ đậm (opacity) từ 1 xuống còn 0.97 */
-      opacity: 0.85;
+      opacity: 0.70;
       /* Đồng thời thu nhỏ nhẹ trạng thái hiện thị cuối cùng nếu muốn (ví dụ từ 1 xuống .97) */
       transform: scale(.97);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
