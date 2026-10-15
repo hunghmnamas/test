@@ -148,20 +148,30 @@
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
 
-        // Dùng Math.max để khớp chính xác với cách hoạt động của object-fit: cover
+        // Dùng scale max để ảnh cover đầy màn hình, sau đó cộng thêm một chút hệ số (ví dụ tăng 5% chiều cao) 
+        // để chắc chắn mép dưới bị đẩy tràn xuống dưới cùng, không bao giờ lộ khoảng xám.
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
+        
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
+
+        // Ép chiều cao ảnh cộng thêm một chút (ví dụ nhân 1.05 hoặc cộng 20px) để tràn đáy tuyệt đối
+        var forcedHeight = displayedHeight + 25; 
+
         var offsetX = (viewportWidth - displayedWidth) / 2;
-        var offsetY = (viewportHeight - displayedHeight) / 2;
+        var offsetY = (viewportHeight - forcedHeight) / 2;
 
-        // Hệ số thu nhỏ toast (ví dụ: 0.5 là thu nhỏ một nửa, bạn có thể chỉnh lại số này)
-        var customFactor = 0.5; 
+        // Áp dụng kích thước trực tiếp cho thẻ background.png
+        bgImg.style.width = displayedWidth + "px";
+        bgImg.style.height = forcedHeight + "px";
+        bgImg.style.left = offsetX + "px";
+        bgImg.style.top = offsetY + "px";
 
+        // === CĂN CHỈNH LẠI TOAST CHO KHỚP VỚI ẢNH BỊ KÉO TRÀN ===
+        var customFactor = 0.5; // Hệ số thu nhỏ toast bạn đang dùng
         var targetWidth = WHITE_WIDTH * scale * customFactor;
         var targetHeight = WHITE_HEIGHT * scale * customFactor;
 
-        // Căn chỉnh vị trí để toast nằm đúng tâm khu vực tương ứng trên ảnh nền đã cover
         var targetLeft = (offsetX + WHITE_LEFT * scale) + (WHITE_WIDTH * scale - targetWidth) / 2;
         var targetTop = (offsetY + WHITE_TOP * scale) + (WHITE_HEIGHT * scale - targetHeight) / 2;
 
