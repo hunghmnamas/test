@@ -55,7 +55,7 @@
       transform: translateX(-50%);
       width: 100%;
       height: 100dvh;
-      object-fit: contain;
+      object-fit: cover;
       object-position: center bottom;
       pointer-events: none;
     }
@@ -73,7 +73,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.97;
+      opacity: 0.95; /* Mờ đi khoảng 5% theo yêu cầu */
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -146,7 +146,7 @@
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
-        var scale = Math.min(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
+        var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
