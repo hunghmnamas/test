@@ -24,7 +24,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      height: 100dvh;
+      min-height: 100%;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -41,33 +41,37 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
-    /* Đưa background.png trực tiếp vào CSS background để lấp đầy và bám sát đáy tuyệt đối trên mọi mobile */
     .app-screen {
       position: absolute;
       inset: 0;
       overflow: hidden;
-      background-color: #8c8c8c;
-      background-image: url('background.png');
-      background-size: cover;
-      background-position: center bottom;
-      background-repeat: no-repeat;
+      background: #8c8c8c;
+    }
+
+    .background {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill; /* Ép ảnh fit zin tuyệt đối màn hình, không bị hở đáy */
+      pointer-events: none;
     }
 
     .toast-wrap {
       position: absolute;
       z-index: 2;
       opacity: 0;
-      transform: scale(.85);
+      transform: scale(.975);
       transform-origin: center;
       will-change: left, top, width, height, opacity, transform;
-      background: transparent;
+      background: transparent; /* Giữ trong suốt để không bị viền đỏ */
       transition: opacity .18s ease-out, transform .18s ease-out;
       pointer-events: none;
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.85; /* Mờ đi khoảng 3% */
-      transform: scale(.90);
+      opacity: 0.97; /* Mờ đi khoảng 3% */
+      transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
 
@@ -114,6 +118,7 @@
 </head>
 <body>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
+    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
       <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
@@ -138,25 +143,17 @@
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
-
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = (viewportHeight - displayedHeight) / 2;
 
-        // Hệ số thu nhỏ toast (0.5 là nhỏ một nửa, bạn có thể chỉnh lại tùy ý)
-        var customFactor = 0.5; 
-        var targetWidth = WHITE_WIDTH * scale * customFactor;
-        var targetHeight = WHITE_HEIGHT * scale * customFactor;
-
-        var targetLeft = (offsetX + WHITE_LEFT * scale) + (WHITE_WIDTH * scale - targetWidth) / 2;
-        var targetTop = (offsetY + WHITE_TOP * scale) + (WHITE_HEIGHT * scale - targetHeight) / 2;
-
-        toastWrap.style.left = targetLeft + "px";
-        toastWrap.style.top = targetTop + "px";
-        toastWrap.style.width = targetWidth + "px";
-        toastWrap.style.height = targetHeight + "px";
+        // Giữ nguyên kích thước chuẩn gốc ban đầu của toast trong file
+        toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
+        toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
+        toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
+        toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
       }
 
       placeToast();
@@ -224,3 +221,4 @@
   </script>
 </body>
 </html>
+```[cite: 1]
