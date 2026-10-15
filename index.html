@@ -24,6 +24,7 @@
     html, body {
       width: 100%;
       height: 100%;
+      height: 100dvh;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -49,6 +50,13 @@
 
     .background {
       position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100dvh;
+      object-fit: cover;
+      object-position: center bottom;
       pointer-events: none;
     }
 
@@ -65,7 +73,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.95; /* Mờ đi khoảng 5% */
+      opacity: 0.95; /* Mờ đi khoảng 5% theo yêu cầu */
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -113,7 +121,7 @@
 </head>
 <body>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
-    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa" id="bgImg">
+    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
       <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
@@ -133,36 +141,19 @@
 
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
-      var bgImg = document.getElementById("bgImg");
       var understood = document.getElementById("understood");
 
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
-
-        // Tính tỷ lệ chuẩn cover màn hình
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
-
-        // Bổ sung thêm khoảng an toàn chiều cao (50px) chống hở đáy trên iOS, đồng thời cân đối lại tâm
-        var forcedHeight = displayedHeight + 50;
-
-        // Căn giữa tuyệt đối theo chiều ngang
         var offsetX = (viewportWidth - displayedWidth) / 2;
-        // Căn chỉnh vị trí dọc để ảnh luôn bám sát đáy và không bị lệch tâm trái
-        var offsetY = viewportHeight - forcedHeight;
+        var offsetY = viewportHeight - displayedHeight;
 
-        // Áp dụng kích thước cho ảnh nền
-        bgImg.style.width = displayedWidth + "px";
-        bgImg.style.height = forcedHeight + "px";
-        bgImg.style.left = offsetX + "px";
-        bgImg.style.top = offsetY + "px";
-
-        // Định vị chuẩn xác khung toast khớp với tọa độ ảnh gốc
-        var baseOffsetY = (viewportHeight - displayedHeight) / 2;
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
-        toastWrap.style.top = (baseOffsetY + WHITE_TOP * scale) + "px";
+        toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
         toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
         toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
       }
@@ -232,3 +223,4 @@
   </script>
 </body>
 </html>
+```[cite: 1]
