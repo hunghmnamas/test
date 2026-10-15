@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#8c8c8c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Thông báo">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
+  <title>Thông báo</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --ink: #111111;
+      --status-shadow: rgba(255, 255, 255, .38);
+      --veil: rgba(0, 0, 0, .12);
+      --fallback-bg: #000000;
+      --fallback-ink: #8e8e93;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #090909;
+        --status-shadow: rgba(255, 255, 255, .32);
+        --veil: rgba(0, 0, 0, .16);
+        --fallback-bg: #000000;
+        --fallback-ink: #98989d;
+      }
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      background: #8c8c8c;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    }
+
+    .app-screen {
+      position: absolute;
+      inset: 0;
+      isolation: isolate;
+      overflow: hidden;
+      background: #8c8c8c;
+    }
+
+    .background {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      pointer-events: none;
+    }
+
+    .veil {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--veil);
+      opacity: 0;
+      transition: opacity .42s ease;
+      pointer-events: none;
+    }
+
+    .app-screen.toast-visible .veil {
+      opacity: 1;
+    }
+
+    .status-bar {
+      position: absolute;
+      z-index: 5;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(28px + env(safe-area-inset-top, 0px));
+      padding: env(safe-area-inset-top, 0px) max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink);
+      text-shadow: 0 1px 0 var(--status-shadow);
+      pointer-events: none;
+    }
+
+    .status-time {
+      min-width: 54px;
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 650;
+      letter-spacing: -.15px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 16px;
+    }
+
+    .cellular,
+    .wifi {
+      width: 18px;
+      height: 14px;
+      display: block;
+    }
+
+    .cellular rect,
+    .wifi path {
+      fill: currentColor;
+    }
+
+    .battery-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 27px;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .battery-percent:empty {
+      display: none;
+    }
+
+    .battery {
+      position: relative;
+      width: 25px;
+      height: 12px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+      padding: 1.5px;
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      right: -3.5px;
+      width: 2px;
+      height: 5px;
+      border-radius: 0 1.5px 1.5px 0;
+      background: currentColor;
+      opacity: .65;
+    }
+
+    .battery-level {
+      display: block;
+      height: 100%;
+      width: 100%;
+      min-width: 2px;
+      border-radius: 1px;
+      background: currentColor;
+      transition: width .25s ease;
+    }
+
+    .charge {
+      display: none;
+      width: 7px;
+      height: 10px;
+      color: currentColor;
+    }
+
+    .battery-group.is-charging .charge {
+      display: block;
+    }
+
+    .toast-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+      pointer-events: none;
+    }
+
+    .toast-wrap {
+      position: relative;
+      width: min(90vw, 480px);
+      max-height: calc(100dvh - 54px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      aspect-ratio: 1039 / 1338;
+      transform: translate3d(0, calc(100% + 32px), 0);
+      opacity: 0;
+      will-change: transform, opacity;
+      transition: transform .62s cubic-bezier(.19, .78, .22, 1), opacity .24s ease;
+      pointer-events: none;
+    }
+
+    .toast-visible .toast-wrap {
+      transform: translate3d(0, 0, 0);
+      opacity: 1;
+    }
+
+    .toast-art {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .understood {
+      position: absolute;
+      left: 5%;
+      top: 81%;
+      width: 89.5%;
+      height: 12%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+
+    .understood:disabled {
+      pointer-events: none;
+    }
+
+    .understood:focus-visible {
+      outline: 3px solid rgba(255, 255, 255, .95);
+      outline-offset: -5px;
+    }
+
+    .exit-screen {
+      position: absolute;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: max(30px, env(safe-area-inset-top, 0px)) 30px max(30px, env(safe-area-inset-bottom, 0px));
+      background: var(--fallback-bg);
+      color: var(--fallback-ink);
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .18s ease, visibility 0s linear .18s;
+      pointer-events: none;
+    }
+
+    .exit-screen p {
+      max-width: 260px;
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 450;
+    }
+
+    body.exited .exit-screen {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity .18s ease;
+    }
+
+    body.exited .app-screen {
+      visibility: hidden;
+    }
+
+    .standalone .status-bar {
+      display: none;
+    }
+
+    @media (orientation: landscape) {
+      .toast-stage {
+        align-items: center;
+      }
+
+      .toast-wrap {
+        width: auto;
+        height: min(90dvh, 620px);
+        max-height: calc(100dvh - 30px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .toast-wrap,
+      .veil,
+      .exit-screen {
+        transition-duration: .01ms;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
+    <img class="background" src="background.png" alt="Nền ứng dụng màu xám">
+    <div class="veil" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <time class="status-time" id="statusTime">--:--</time>
+      <div class="status-icons">
+        <svg class="cellular" viewBox="0 0 18 14" aria-hidden="true">
+          <rect x="1" y="9" width="3" height="4" rx="1"></rect>
+          <rect x="5.5" y="6" width="3" height="7" rx="1"></rect>
+          <rect x="10" y="3" width="3" height="10" rx="1"></rect>
+          <rect x="14.5" y="0" width="3" height="13" rx="1"></rect>
+        </svg>
+        <svg class="wifi" viewBox="0 0 20 15" aria-hidden="true">
+          <path d="M10 13.9c.9 0 1.6-.7 1.6-1.6s-.7-1.6-1.6-1.6-1.6.7-1.6 1.6.7 1.6 1.6 1.6Zm0-6.6c2 0 3.8.8 5.2 2.1l1.7-1.7A9.8 9.8 0 0 0 10 4.9c-2.7 0-5.1 1.1-6.9 2.8l1.7 1.7A7.4 7.4 0 0 1 10 7.3Zm0-4.8c3.3 0 6.3 1.3 8.5 3.5L20 4.5A14 14 0 0 0 0 4.5L1.5 6A12 12 0 0 1 10 2.5Z"></path>
+        </svg>
+        <div class="battery-group" id="batteryGroup">
+          <span class="battery-percent" id="batteryPercent"></span>
+          <svg class="charge" viewBox="0 0 8 12" aria-hidden="true"><path fill="currentColor" d="M4.7 0 .8 6.7h2.8L3 12l4.2-7H4.4L4.7 0Z"></path></svg>
+          <span class="battery" aria-hidden="true"><span class="battery-level" id="batteryLevel"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <section class="toast-stage" aria-label="Nội dung thông báo">
+      <div class="toast-wrap" id="toastWrap">
+        <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
+        <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
+      </div>
+    </section>
+  </main>
+
+  <section class="exit-screen" id="exitScreen" aria-live="polite">
+    <p>Vuốt lên từ cạnh dưới để trở về Màn hình chính.</p>
+  </section>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var appScreen = document.getElementById("appScreen");
+      var understood = document.getElementById("understood");
+      var timeNode = document.getElementById("statusTime");
+      var batteryGroup = document.getElementById("batteryGroup");
+      var batteryPercent = document.getElementById("batteryPercent");
+      var batteryLevel = document.getElementById("batteryLevel");
+      var isStandalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+
+      if (isStandalone) {
+        document.documentElement.classList.add("standalone");
+      }
+
+      function updateTime() {
+        var now = new Date();
+        timeNode.textContent = new Intl.DateTimeFormat("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(now);
+      }
+
+      updateTime();
+      window.setInterval(updateTime, 15000);
+
+      if (!isStandalone && navigator.getBattery) {
+        navigator.getBattery().then(function (battery) {
+          function updateBattery() {
+            var level = Math.max(0, Math.min(100, Math.round(battery.level * 100)));
+            batteryPercent.textContent = level + "%";
+            batteryLevel.style.width = level + "%";
+            batteryGroup.classList.toggle("is-charging", battery.charging);
+          }
+          updateBattery();
+          battery.addEventListener("levelchange", updateBattery);
+          battery.addEventListener("chargingchange", updateBattery);
+        }).catch(function () {
+          batteryPercent.textContent = "";
+          batteryLevel.style.width = "100%";
+        });
+      }
+
+      window.setTimeout(function () {
+        appScreen.classList.add("toast-visible");
+        understood.disabled = false;
+      }, 1000);
+
+      understood.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        understood.disabled = true;
+
+        try {
+          window.close();
+        } catch (error) {
+          // The in-page fallback below is used when iOS blocks programmatic closing.
+        }
+
+        window.setTimeout(function () {
+          document.body.classList.add("exited");
+        }, 120);
+      });
+
+      document.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("selectstart", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("dragstart", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("touchmove", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("gesturestart", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("gesturechange", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("gestureend", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      var lastTouchEnd = 0;
+      document.addEventListener("touchend", function (event) {
+        var now = Date.now();
+        if (now - lastTouchEnd < 300 && event.target !== understood) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    }());
+  </script>
+</body>
+</html>
