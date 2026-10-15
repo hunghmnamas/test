@@ -49,11 +49,7 @@
 
     .background {
       position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
       pointer-events: none;
-      /* Ép kích thước được điều khiển trực tiếp bằng JavaScript bên dưới để phủ kín tuyệt đối iPhone 15 Pro Max */
     }
 
     .toast-wrap {
@@ -144,27 +140,29 @@
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
 
-        // Tính toán scale phủ kín màn hình (cover)
+        // Tính tỷ lệ chuẩn cover màn hình
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
 
-        // Cộng thêm một khoảng an toàn (ví dụ 60px) vào chiều cao ảnh nền 
-        // để đẩy hẳn phần đáy xuống dưới mép màn hình, triệt tiêu hoàn toàn vùng xám trên iOS
-        var forcedHeight = displayedHeight + 60; 
+        // Bổ sung thêm khoảng an toàn chiều cao (50px) chống hở đáy trên iOS, đồng thời cân đối lại tâm
+        var forcedHeight = displayedHeight + 50;
 
+        // Căn giữa tuyệt đối theo chiều ngang
         var offsetX = (viewportWidth - displayedWidth) / 2;
-        var offsetY = viewportHeight - forcedHeight; // Neo sát đáy
+        // Căn chỉnh vị trí dọc để ảnh luôn bám sát đáy và không bị lệch tâm trái
+        var offsetY = viewportHeight - forcedHeight;
 
-        // Gán kích thước trực tiếp cho ảnh nền
+        // Áp dụng kích thước cho ảnh nền
         bgImg.style.width = displayedWidth + "px";
         bgImg.style.height = forcedHeight + "px";
         bgImg.style.left = offsetX + "px";
         bgImg.style.top = offsetY + "px";
 
-        // Định vị vị trí toast tương ứng với tỉ lệ ảnh
+        // Định vị chuẩn xác khung toast khớp với tọa độ ảnh gốc
+        var baseOffsetY = (viewportHeight - displayedHeight) / 2;
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
-        toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
+        toastWrap.style.top = (baseOffsetY + WHITE_TOP * scale) + "px";
         toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
         toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
       }
