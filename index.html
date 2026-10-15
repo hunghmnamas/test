@@ -24,7 +24,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      min-height: 100%;
+      height: 100dvh;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -41,23 +41,16 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
+    /* Đưa background.png trực tiếp vào CSS background để lấp đầy và bám sát đáy tuyệt đối trên mọi mobile */
     .app-screen {
       position: absolute;
       inset: 0;
       overflow: hidden;
-      background: #8c8c8c;
-    }
-
-    /* Dùng CSS thuần để ép ảnh nền phủ kín và bám sát đáy tuyệt đối */
-    .background {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      height: 100dvh; /* Khớp chuẩn di động */
-      object-fit: cover;
-      object-position: center bottom; /* Neo trọng tâm ảnh sát cạnh dưới, triệt tiêu khoảng xám đáy */
-      pointer-events: none;
+      background-color: #8c8c8c;
+      background-image: url('background.png');
+      background-size: cover;
+      background-position: center bottom;
+      background-repeat: no-repeat;
     }
 
     .toast-wrap {
@@ -121,7 +114,6 @@
 </head>
 <body>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
-    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
       <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
@@ -147,14 +139,13 @@
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
 
-        // Tính toán tỷ lệ chuẩn để định vị khung toast khớp với ảnh nền đang dùng object-fit: cover
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = (viewportHeight - displayedHeight) / 2;
 
-        // Hệ số thu nhỏ toast (bạn có thể tùy chỉnh: 0.5 là nhỏ một nửa)
+        // Hệ số thu nhỏ toast (0.5 là nhỏ một nửa, bạn có thể chỉnh lại tùy ý)
         var customFactor = 0.5; 
         var targetWidth = WHITE_WIDTH * scale * customFactor;
         var targetHeight = WHITE_HEIGHT * scale * customFactor;
