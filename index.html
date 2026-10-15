@@ -48,34 +48,33 @@
       background: #8c8c8c;
     }
 
- .background {
+    /* Dùng CSS thuần để ép ảnh nền phủ kín và bám sát đáy tuyệt đối */
+    .background {
       position: absolute;
-      left: 50%;
-      bottom: 0;                /* Neo chặt cạnh dưới xuống đáy màn hình */
-      transform: translateX(-50%);
-      width: 100%;             /* Ép chiều rộng phủ kín màn hình theo chiều ngang */
-      height: 100vh;           /* Hoặc dùng 100dvh để khớp chuẩn di động */
-      height: 100dvh;
-      object-fit: cover;       /* Đảm bảo ảnh phủ kín mà không bị méo */
-      object-position: center bottom; /* Quan trọng: Neo trọng tâm ảnh về phía cạnh dưới */
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh; /* Khớp chuẩn di động */
+      object-fit: cover;
+      object-position: center bottom; /* Neo trọng tâm ảnh sát cạnh dưới, triệt tiêu khoảng xám đáy */
       pointer-events: none;
     }
 
-   .toast-wrap {
+    .toast-wrap {
       position: absolute;
       z-index: 2;
       opacity: 0;
-      transform: scale(.85); /* Thu nhỏ trạng thái ban đầu */
+      transform: scale(.85);
       transform-origin: center;
       will-change: left, top, width, height, opacity, transform;
-      background: transparent; /* Giữ trong suốt để không bị viền đỏ */
+      background: transparent;
       transition: opacity .18s ease-out, transform .18s ease-out;
       pointer-events: none;
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.85; /* Mờ đi khoảng 3% (giảm từ 1 xuống 0.97) */
-      transform: scale(.90); /* Thu nhỏ kích thước hiển thị */
+      opacity: 0.85; /* Mờ đi khoảng 3% */
+      transform: scale(.90);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
 
@@ -148,27 +147,15 @@
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
 
-        // Dùng scale max để ảnh cover đầy màn hình, sau đó cộng thêm một chút hệ số (ví dụ tăng 5% chiều cao) 
-        // để chắc chắn mép dưới bị đẩy tràn xuống dưới cùng, không bao giờ lộ khoảng xám.
+        // Tính toán tỷ lệ chuẩn để định vị khung toast khớp với ảnh nền đang dùng object-fit: cover
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
-        
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
-
-        // Ép chiều cao ảnh cộng thêm một chút (ví dụ nhân 1.05 hoặc cộng 20px) để tràn đáy tuyệt đối
-        var forcedHeight = displayedHeight + 25; 
-
         var offsetX = (viewportWidth - displayedWidth) / 2;
-        var offsetY = (viewportHeight - forcedHeight) / 2;
+        var offsetY = (viewportHeight - displayedHeight) / 2;
 
-        // Áp dụng kích thước trực tiếp cho thẻ background.png
-        bgImg.style.width = displayedWidth + "px";
-        bgImg.style.height = forcedHeight + "px";
-        bgImg.style.left = offsetX + "px";
-        bgImg.style.top = offsetY + "px";
-
-        // === CĂN CHỈNH LẠI TOAST CHO KHỚP VỚI ẢNH BỊ KÉO TRÀN ===
-        var customFactor = 0.5; // Hệ số thu nhỏ toast bạn đang dùng
+        // Hệ số thu nhỏ toast (bạn có thể tùy chỉnh: 0.5 là nhỏ một nửa)
+        var customFactor = 0.5; 
         var targetWidth = WHITE_WIDTH * scale * customFactor;
         var targetHeight = WHITE_HEIGHT * scale * customFactor;
 
@@ -180,6 +167,7 @@
         toastWrap.style.width = targetWidth + "px";
         toastWrap.style.height = targetHeight + "px";
       }
+
       placeToast();
       window.addEventListener("resize", placeToast, { passive: true });
       window.addEventListener("orientationchange", placeToast, { passive: true });
