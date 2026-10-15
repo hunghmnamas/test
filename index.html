@@ -24,7 +24,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      min-height: 100%;
+      height: 100dvh;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -50,10 +50,13 @@
 
     .background {
       position: absolute;
-      inset: 0;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
       width: 100%;
-      height: 100%;
-      object-fit: fill; /* Ép ảnh fit zin tuyệt đối màn hình, không bị hở đáy */
+      height: 100dvh;
+      object-fit: contain;
+      object-position: center bottom;
       pointer-events: none;
     }
 
@@ -64,13 +67,13 @@
       transform: scale(.975);
       transform-origin: center;
       will-change: left, top, width, height, opacity, transform;
-      background: transparent; /* Giữ trong suốt để không bị viền đỏ */
+      background: transparent;
       transition: opacity .18s ease-out, transform .18s ease-out;
       pointer-events: none;
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.97; /* Mờ đi khoảng 3% */
+      opacity: 0.97;
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -143,13 +146,12 @@
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
-        var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
+        var scale = Math.min(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
-        var offsetY = (viewportHeight - displayedHeight) / 2;
+        var offsetY = viewportHeight - displayedHeight;
 
-        // Giữ nguyên kích thước chuẩn gốc ban đầu của toast trong file
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
         toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
