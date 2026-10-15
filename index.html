@@ -48,14 +48,13 @@
       background: #8c8c8c;
     }
 
-    .background {
+  .background {
       position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      width: auto;
-      height: 100%; /* Hoặc chỉnh theo tính toán JavaScript bên dưới */
-      object-fit: contain;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Phủ kín toàn bộ màn hình, tự động tràn viền để không bị khoảng xám */
+      object-position: center;
       pointer-events: none;
     }
 
@@ -145,19 +144,21 @@
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
+
+        // Dùng Math.max để khớp chính xác với cách hoạt động của object-fit: cover
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = (viewportHeight - displayedHeight) / 2;
 
-        // === THÊM HỆ SỐ THU NHỎ KHUNG TOAST (Ví dụ: 0.5 là thu nhỏ một nửa) ===
-        var customFactor = 0.87; // Bạn có thể tăng/giảm số này (VD: 0.4 hoặc 0.6) cho vừa ý
+        // Hệ số thu nhỏ toast (ví dụ: 0.5 là thu nhỏ một nửa, bạn có thể chỉnh lại số này)
+        var customFactor = 0.5; 
 
         var targetWidth = WHITE_WIDTH * scale * customFactor;
         var targetHeight = WHITE_HEIGHT * scale * customFactor;
 
-        // Căn chỉnh lại vị trí để khung toast thu nhỏ nằm chính giữa vùng trắng gốc
+        // Căn chỉnh vị trí để toast nằm đúng tâm khu vực tương ứng trên ảnh nền đã cover
         var targetLeft = (offsetX + WHITE_LEFT * scale) + (WHITE_WIDTH * scale - targetWidth) / 2;
         var targetTop = (offsetY + WHITE_TOP * scale) + (WHITE_HEIGHT * scale - targetHeight) / 2;
 
@@ -166,7 +167,6 @@
         toastWrap.style.width = targetWidth + "px";
         toastWrap.style.height = targetHeight + "px";
       }
-
       placeToast();
       window.addEventListener("resize", placeToast, { passive: true });
       window.addEventListener("orientationchange", placeToast, { passive: true });
