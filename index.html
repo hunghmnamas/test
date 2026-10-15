@@ -59,16 +59,16 @@
     }
 
     .toast-wrap {
-      position: absolute;
-      z-index: 2;
-      opacity: 0;
-      transform: scale(.975);
-      transform-origin: center;
-      will-change: left, top, width, height, opacity, transform;
-      background: rgb(211, 2, 52);
-      transition: opacity .18s ease-out, transform .18s ease-out;
-      pointer-events: none;
-    }
+  position: absolute;
+  z-index: 2;
+  opacity: 0;
+  transform: scale(.975);
+  transform-origin: center;
+  will-change: left, top, width, height, opacity, transform;
+  background: transparent; /* Thay đổi thành trong suốt */
+  transition: opacity .18s ease-out, transform .18s ease-out;
+  pointer-events: none;
+}
 
     .toast-visible .toast-wrap {
       opacity: 1;
