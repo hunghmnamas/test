@@ -24,7 +24,6 @@
     html, body {
       width: 100%;
       height: 100%;
-      height: 100dvh;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -38,25 +37,26 @@
     body {
       position: fixed;
       inset: 0;
+      overflow: visible;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
     .app-screen {
-      position: absolute;
-      inset: 0;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       background: #8c8c8c;
     }
 
     .background {
       position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      width: 100%;
-      height: 100dvh;
-      object-fit: cover;
-      object-position: center bottom;
+      left: 0;
+      top: 0;
+      margin: 0;
+      padding: 0;
       pointer-events: none;
     }
 
@@ -142,15 +142,37 @@
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
+      var backgroundEl = document.querySelector(".background");
+      var isStandalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
 
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
+        if (window.visualViewport) {
+          viewportHeight = Math.max(viewportHeight, Math.round(window.visualViewport.height));
+        }
+        if (isStandalone) {
+          // Chạy từ icon: iOS có thể báo innerHeight ngắn hơn màn hình thật
+          // (thiếu vùng home indicator). Lấy chiều cao thật của màn hình.
+          var portrait = window.screen.height >= window.screen.width;
+          var screenH = portrait ? window.screen.height : window.screen.width;
+          viewportHeight = Math.max(viewportHeight, screenH);
+        }
+
+        // Neo từ đỉnh xuống với chiều cao thật => đáy ảnh = đáy điện thoại
+        appScreen.style.height = viewportHeight + "px";
+
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = viewportHeight - displayedHeight;
+
+        backgroundEl.style.width = displayedWidth + "px";
+        backgroundEl.style.height = displayedHeight + "px";
+        backgroundEl.style.left = offsetX + "px";
+        backgroundEl.style.top = offsetY + "px";
 
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
@@ -164,6 +186,12 @@
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", placeToast, { passive: true });
       }
+      window.addEventListener("load", function () {
+        placeToast();
+        window.setTimeout(placeToast, 300);
+        window.setTimeout(placeToast, 1000);
+      }, { passive: true });
+      window.addEventListener("pageshow", placeToast, { passive: true });
 
       function showToast() {
         placeToast();
@@ -223,4 +251,3 @@
   </script>
 </body>
 </html>
-```[cite: 1]
