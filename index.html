@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#8c8c8c">
+  <meta name="theme-color" content="#003ab1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Thông báo">
@@ -25,38 +25,39 @@
       width: 100%;
       height: 100%;
       margin: 0;
+      padding: 0;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
-      background: #8c8c8c;
+      background: #003ab1;
     }
 
     body {
       position: fixed;
       inset: 0;
-      overflow: visible;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
     .app-screen {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
-      background: #8c8c8c;
+      background: #003ab1;
     }
 
+    /* Hiển thị ĐÚNG 100% ảnh background, không cắt, không lộ nền sau:
+       - inset:0 + width/height:100% => khung ảnh = đúng viewport.
+       - object-fit: fill => ảnh phủ kín khung, toàn bộ ảnh luôn hiện,
+         không có khoảng trống nào để lộ nền trang. */
     .background {
       position: absolute;
-      left: 0;
-      top: 0;
-      margin: 0;
-      padding: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
       pointer-events: none;
     }
 
@@ -121,9 +122,9 @@
 </head>
 <body>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
-    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa">
+    <img class="background" src="background.png" alt="Nền ứng dụng màu xanh">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
-      <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
+      <img class="toast-art" src="toast.png" alt="Thẻ thông báo màu xanh đậm">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
     </section>
   </main>
@@ -142,56 +143,30 @@
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
-      var backgroundEl = document.querySelector(".background");
-      var isStandalone = window.navigator.standalone === true ||
-        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
 
       function placeToast() {
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
-        if (window.visualViewport) {
-          viewportHeight = Math.max(viewportHeight, Math.round(window.visualViewport.height));
-        }
-        if (isStandalone) {
-          // Chạy từ icon: iOS có thể báo innerHeight ngắn hơn màn hình thật
-          // (thiếu vùng home indicator). Lấy chiều cao thật của màn hình.
-          var portrait = window.screen.height >= window.screen.width;
-          var screenH = portrait ? window.screen.height : window.screen.width;
-          viewportHeight = Math.max(viewportHeight, screenH);
-        }
+        /* Khớp với object-fit: fill của ảnh nền: toàn bộ ảnh 1290x2796 được
+           kéo vừa khít viewport, nên tọa độ design quy đổi tuyến tính
+           theo từng trục, không cắt xén. */
+        var scaleX = viewportWidth / BACKGROUND_WIDTH;
+        var scaleY = viewportHeight / BACKGROUND_HEIGHT;
 
-        // Neo từ đỉnh xuống với chiều cao thật => đáy ảnh = đáy điện thoại
-        appScreen.style.height = viewportHeight + "px";
-
-        var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
-        var displayedWidth = BACKGROUND_WIDTH * scale;
-        var displayedHeight = BACKGROUND_HEIGHT * scale;
-        var offsetX = (viewportWidth - displayedWidth) / 2;
-        var offsetY = viewportHeight - displayedHeight;
-
-        backgroundEl.style.width = displayedWidth + "px";
-        backgroundEl.style.height = displayedHeight + "px";
-        backgroundEl.style.left = offsetX + "px";
-        backgroundEl.style.top = offsetY + "px";
-
-        toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
-        toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
-        toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
-        toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
+        toastWrap.style.left = (WHITE_LEFT * scaleX) + "px";
+        toastWrap.style.top = (WHITE_TOP * scaleY) + "px";
+        toastWrap.style.width = (WHITE_WIDTH * scaleX) + "px";
+        toastWrap.style.height = (WHITE_HEIGHT * scaleY) + "px";
       }
 
       placeToast();
       window.addEventListener("resize", placeToast, { passive: true });
       window.addEventListener("orientationchange", placeToast, { passive: true });
+      window.addEventListener("load", placeToast, { passive: true });
+      window.addEventListener("pageshow", placeToast, { passive: true });
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", placeToast, { passive: true });
       }
-      window.addEventListener("load", function () {
-        placeToast();
-        window.setTimeout(placeToast, 300);
-        window.setTimeout(placeToast, 1000);
-      }, { passive: true });
-      window.addEventListener("pageshow", placeToast, { passive: true });
 
       function showToast() {
         placeToast();
