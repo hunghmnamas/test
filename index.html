@@ -48,16 +48,12 @@
       background: #8c8c8c;
     }
 
-   .background {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100dvh;
-  object-fit: cover;
-  object-position: center bottom;
-  pointer-events: none;
-}
+    .background {
+      position: absolute;
+      pointer-events: none;
+      margin: 0;
+      padding: 0;
+    }
 
     .toast-wrap {
       position: absolute;
@@ -72,7 +68,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.95; /* Mờ đi khoảng 5% theo yêu cầu */
+      opacity: 0.95;
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -141,6 +137,7 @@
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
+      var backgroundEl = document.querySelector(".background");
 
       function placeToast() {
         var viewportWidth = window.innerWidth;
@@ -150,6 +147,11 @@
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = viewportHeight - displayedHeight;
+
+        backgroundEl.style.width = displayedWidth + "px";
+        backgroundEl.style.height = displayedHeight + "px";
+        backgroundEl.style.left = offsetX + "px";
+        backgroundEl.style.top = offsetY + "px";
 
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
@@ -222,4 +224,3 @@
   </script>
 </body>
 </html>
-```[cite: 1]
