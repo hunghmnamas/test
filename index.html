@@ -41,17 +41,24 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
+    /* Khung app luôn cao bằng CHIỀU CAO THẬT của màn hình (kể cả khi thanh
+       công cụ Safari đang hiện), để ảnh nền chạm sát cạnh dưới điện thoại
+       trong mọi trạng thái. 100lvh = large viewport height, ổn định và
+       không bị co lại khi thanh công cụ hiện/ẩn. */
     .app-screen {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;  /* dự phòng cho trình duyệt cũ */
+      height: 100lvh;
       overflow: hidden;
       background: #003ab1;
     }
 
     /* Hiển thị ĐÚNG 100% ảnh background, không cắt, không lộ nền sau:
-       - inset:0 + width/height:100% => khung ảnh = đúng viewport.
-       - object-fit: fill => ảnh phủ kín khung, toàn bộ ảnh luôn hiện,
-         không có khoảng trống nào để lộ nền trang. */
+       - inset:0 + width/height:100% => khung ảnh = đúng .app-screen (100lvh).
+       - object-fit: fill => ảnh phủ kín khung, toàn bộ ảnh luôn hiện. */
     .background {
       position: absolute;
       inset: 0;
@@ -64,10 +71,17 @@
     .toast-wrap {
       position: absolute;
       z-index: 2;
+      /* Vị trí tính theo % của ảnh nền 1290x2796 nên LUÔN khớp với ảnh nền,
+         vì cả hai cùng nằm trong .app-screen (100lvh) — không còn phụ thuộc
+         vào chiều cao mà JS đo được khi thanh công cụ hiện/ẩn. */
+      left: 16.8992%;
+      top: 30.4721%;
+      width: 65.6589%;
+      height: 39.0558%;
       opacity: 0;
       transform: scale(.975);
       transform-origin: center;
-      will-change: left, top, width, height, opacity, transform;
+      will-change: opacity, transform;
       background: transparent;
       transition: opacity .18s ease-out, transform .18s ease-out;
       pointer-events: none;
@@ -133,43 +147,14 @@
     (function () {
       "use strict";
 
-      var BACKGROUND_WIDTH = 1290;
-      var BACKGROUND_HEIGHT = 2796;
-      var WHITE_LEFT = 218;
-      var WHITE_TOP = 852;
-      var WHITE_WIDTH = 847;
-      var WHITE_HEIGHT = 1092;
-
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
 
-      function placeToast() {
-        var viewportWidth = window.innerWidth;
-        var viewportHeight = window.innerHeight;
-        /* Khớp với object-fit: fill của ảnh nền: toàn bộ ảnh 1290x2796 được
-           kéo vừa khít viewport, nên tọa độ design quy đổi tuyến tính
-           theo từng trục, không cắt xén. */
-        var scaleX = viewportWidth / BACKGROUND_WIDTH;
-        var scaleY = viewportHeight / BACKGROUND_HEIGHT;
-
-        toastWrap.style.left = (WHITE_LEFT * scaleX) + "px";
-        toastWrap.style.top = (WHITE_TOP * scaleY) + "px";
-        toastWrap.style.width = (WHITE_WIDTH * scaleX) + "px";
-        toastWrap.style.height = (WHITE_HEIGHT * scaleY) + "px";
-      }
-
-      placeToast();
-      window.addEventListener("resize", placeToast, { passive: true });
-      window.addEventListener("orientationchange", placeToast, { passive: true });
-      window.addEventListener("load", placeToast, { passive: true });
-      window.addEventListener("pageshow", placeToast, { passive: true });
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", placeToast, { passive: true });
-      }
+      /* Vị trí toast đã được đặt bằng % trong CSS (.toast-wrap) nên luôn
+         khớp với ảnh nền mà không cần đo viewport bằng JS. */
 
       function showToast() {
-        placeToast();
         appScreen.classList.add("toast-visible");
         toastWrap.setAttribute("aria-hidden", "false");
         understood.disabled = false;
