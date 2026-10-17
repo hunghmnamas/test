@@ -24,6 +24,7 @@
     html, body {
       width: 100%;
       height: 100%;
+      height: 100dvh;
       margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -37,27 +38,24 @@
     body {
       position: fixed;
       inset: 0;
-      overflow: visible;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
     .app-screen {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      top: auto;
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
       background: #8c8c8c;
     }
 
     .background {
       position: absolute;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100dvh;
+      object-fit: cover;
+      object-position: center bottom;
       pointer-events: none;
-      margin: 0;
-      padding: 0;
     }
 
     .toast-wrap {
@@ -73,7 +71,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.95;
+      opacity: 0.95; /* Mờ đi khoảng 5% theo yêu cầu */
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -142,70 +140,20 @@
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
-      var backgroundEl = document.querySelector(".background");
-
-      var isStandalone = window.navigator.standalone === true ||
-        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-      var debugEl = null;
-
-      function getViewportSize() {
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-        if (window.visualViewport) {
-          h = Math.max(h, Math.round(window.visualViewport.height));
-        }
-        if (isStandalone) {
-          // Ở chế độ app (Thêm vào Màn hình chính), khung hiển thị = toàn bộ màn hình.
-          // innerHeight trên iOS có thể thiếu vùng home indicator, nên lấy theo screen.
-          var portrait = window.screen.height >= window.screen.width;
-          var sh = portrait ? window.screen.height : window.screen.width;
-          h = Math.max(h, sh);
-        }
-        return { w: w, h: h };
-      }
 
       function placeToast() {
-        var size = getViewportSize();
-        var viewportWidth = size.w;
-        var viewportHeight = size.h;
-
-        // app-screen luôn dính đáy màn hình, cao đúng viewportHeight
-        appScreen.style.height = viewportHeight + "px";
-
+        var viewportWidth = window.innerWidth;
+        var viewportHeight = window.innerHeight;
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = viewportHeight - displayedHeight;
 
-        // Cạnh dưới background bám sát cạnh dưới app-screen
-        backgroundEl.style.width = displayedWidth + "px";
-        backgroundEl.style.height = displayedHeight + "px";
-        backgroundEl.style.left = offsetX + "px";
-        backgroundEl.style.top = "auto";
-        backgroundEl.style.bottom = "0px";
-
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
         toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
         toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
-
-        if (/[?&]debug/.test(location.search)) {
-          if (!debugEl) {
-            debugEl = document.createElement("pre");
-            debugEl.style.cssText = "position:fixed;left:6px;top:50px;z-index:99;margin:0;padding:6px;" +
-              "font:11px/1.3 monospace;color:#0f0;background:rgba(0,0,0,.7);pointer-events:none;white-space:pre-wrap";
-            document.body.appendChild(debugEl);
-          }
-          debugEl.textContent =
-            "standalone: " + isStandalone +
-            "\ninner: " + window.innerWidth + "x" + window.innerHeight +
-            "\nvisual: " + (window.visualViewport ? Math.round(window.visualViewport.width) + "x" + Math.round(window.visualViewport.height) : "n/a") +
-            "\nscreen: " + window.screen.width + "x" + window.screen.height +
-            "\nused: " + viewportWidth + "x" + viewportHeight +
-            "\nscale: " + scale.toFixed(4) +
-            "\nbg: " + Math.round(displayedWidth) + "x" + Math.round(displayedHeight);
-        }
       }
 
       placeToast();
@@ -214,15 +162,6 @@
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", placeToast, { passive: true });
       }
-      if (window.ResizeObserver) {
-        new ResizeObserver(placeToast).observe(document.documentElement);
-      }
-      window.addEventListener("load", function () {
-        placeToast();
-        window.setTimeout(placeToast, 300);
-        window.setTimeout(placeToast, 1000);
-      }, { passive: true });
-      window.addEventListener("pageshow", placeToast, { passive: true });
 
       function showToast() {
         placeToast();
@@ -282,3 +221,4 @@
   </script>
 </body>
 </html>
+```[cite: 1]
