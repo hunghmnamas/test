@@ -32,56 +32,47 @@
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
-      background: #003ab1;
+    }
+
+    /* ẢNH NỀN VẼ TRỰC TIẾP TRÊN <html> (canvas của trang).
+       Canvas luôn được vẽ phủ toàn bộ màn hình, kể cả phần iOS không tính vào viewport.
+       Chiều cao html (--app-h) do JS đặt = chiều cao thật của màn hình,
+       nên đáy ảnh luôn sát đáy điện thoại. */
+    html {
+      height: var(--app-h, 100%);
+      background: #003ab1 url("background.png") no-repeat 0 0 / 100% 100%;
     }
 
     body {
       position: fixed;
       inset: 0;
+      overflow: visible;
+      background: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
-    /* Khung app luôn cao bằng CHIỀU CAO THẬT của màn hình (kể cả khi thanh
-       công cụ Safari đang hiện), để ảnh nền chạm sát cạnh dưới điện thoại
-       trong mọi trạng thái. 100lvh = large viewport height, ổn định và
-       không bị co lại khi thanh công cụ hiện/ẩn. */
     .app-screen {
       position: absolute;
-      top: 0;
       left: 0;
+      top: 0;
       width: 100%;
-      height: 100vh;  /* dự phòng cho trình duyệt cũ */
-      height: 100lvh;
+      height: var(--app-h, 100%);
       overflow: hidden;
-      background: #003ab1;
+      background: transparent;
     }
 
-    /* Hiển thị ĐÚNG 100% ảnh background, không cắt, không lộ nền sau:
-       - inset:0 + width/height:100% => khung ảnh = đúng .app-screen (100lvh).
-       - object-fit: fill => ảnh phủ kín khung, toàn bộ ảnh luôn hiện. */
-    .background {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: fill;
-      pointer-events: none;
-    }
+    #dbgHot { position: fixed; left: 0; top: 0; width: 80px; height: 80px; z-index: 100; touch-action: manipulation; }
+    #dbgBox { position: fixed; left: 6px; top: 90px; z-index: 99; margin: 0; padding: 6px; font: 11px/1.35 monospace;
+      color: #0f0; background: rgba(0,0,0,.8); pointer-events: none; white-space: pre-wrap; display: none; }
+    #dbgRed { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; background: red; z-index: 98; display: none; pointer-events: none; }
 
     .toast-wrap {
       position: absolute;
       z-index: 2;
-      /* Vị trí tính theo % của ảnh nền 1290x2796 nên LUÔN khớp với ảnh nền,
-         vì cả hai cùng nằm trong .app-screen (100lvh) — không còn phụ thuộc
-         vào chiều cao mà JS đo được khi thanh công cụ hiện/ẩn. */
-      left: 16.8992%;
-      top: 30.4721%;
-      width: 65.6589%;
-      height: 39.0558%;
       opacity: 0;
       transform: scale(.975);
       transform-origin: center;
-      will-change: opacity, transform;
+      will-change: left, top, width, height, opacity, transform;
       background: transparent;
       transition: opacity .18s ease-out, transform .18s ease-out;
       pointer-events: none;
@@ -135,8 +126,8 @@
   </style>
 </head>
 <body>
+  <div id="dbgHot"></div><div id="dbgRed"></div><pre id="dbgBox"></pre>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
-    <img class="background" src="background.png" alt="Nền ứng dụng màu xanh">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
       <img class="toast-art" src="toast.png" alt="Thẻ thông báo màu xanh đậm">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
@@ -147,14 +138,83 @@
     (function () {
       "use strict";
 
+      var BACKGROUND_WIDTH = 1290;
+      var BACKGROUND_HEIGHT = 2796;
+      var WHITE_LEFT = 218;
+      var WHITE_TOP = 852;
+      var WHITE_WIDTH = 847;
+      var WHITE_HEIGHT = 1092;
+
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
 
-      /* Vị trí toast đã được đặt bằng % trong CSS (.toast-wrap) nên luôn
-         khớp với ảnh nền mà không cần đo viewport bằng JS. */
+      var isStandalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+      var debugOn = /[?&]debug/.test(location.search);
+
+      function placeToast() {
+        var viewportWidth = window.innerWidth;
+        var inner = window.innerHeight;
+        var vv = window.visualViewport ? Math.round(window.visualViewport.height) : 0;
+        var portrait = window.screen.height >= window.screen.width;
+        var screenH = portrait ? window.screen.height : window.screen.width;
+
+        // Chiều cao thật: chạy từ icon thì khung hiển thị = cả màn hình,
+        // còn innerHeight trên iOS có thể ngắn hơn (thiếu vùng home indicator).
+        var viewportHeight = Math.max(inner, vv);
+        if (isStandalone) viewportHeight = Math.max(viewportHeight, screenH);
+
+        document.documentElement.style.setProperty("--app-h", viewportHeight + "px");
+
+        var scaleX = viewportWidth / BACKGROUND_WIDTH;
+        var scaleY = viewportHeight / BACKGROUND_HEIGHT;
+
+        toastWrap.style.left = (WHITE_LEFT * scaleX) + "px";
+        toastWrap.style.top = (WHITE_TOP * scaleY) + "px";
+        toastWrap.style.width = (WHITE_WIDTH * scaleX) + "px";
+        toastWrap.style.height = (WHITE_HEIGHT * scaleY) + "px";
+
+        var box = document.getElementById("dbgBox");
+        var red = document.getElementById("dbgRed");
+        if (debugOn) {
+          box.style.display = red.style.display = "block";
+          box.textContent =
+            "standalone: " + isStandalone +
+            "\ninner: " + window.innerWidth + " x " + inner +
+            "\nvisualViewport H: " + vv +
+            "\nscreen: " + window.screen.width + " x " + window.screen.height +
+            "\nUSED H: " + viewportHeight +
+            "\nhtml H: " + Math.round(document.documentElement.getBoundingClientRect().height) +
+            "\nred line = đáy viewport";
+        } else {
+          box.style.display = red.style.display = "none";
+        }
+      }
+
+      (function () {
+        var taps = 0, timer = null;
+        document.getElementById("dbgHot").addEventListener("click", function () {
+          taps++;
+          clearTimeout(timer);
+          timer = setTimeout(function () { taps = 0; }, 700);
+          if (taps >= 3) { taps = 0; debugOn = !debugOn; placeToast(); }
+        });
+      }());
+
+      placeToast();
+      window.setTimeout(placeToast, 300);
+      window.setTimeout(placeToast, 1000);
+      window.addEventListener("resize", placeToast, { passive: true });
+      window.addEventListener("orientationchange", placeToast, { passive: true });
+      window.addEventListener("load", placeToast, { passive: true });
+      window.addEventListener("pageshow", placeToast, { passive: true });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", placeToast, { passive: true });
+      }
 
       function showToast() {
+        placeToast();
         appScreen.classList.add("toast-visible");
         toastWrap.setAttribute("aria-hidden", "false");
         understood.disabled = false;
@@ -202,7 +262,7 @@
       var lastTouchEnd = 0;
       document.addEventListener("touchend", function (event) {
         var now = Date.now();
-        if (now - lastTouchEnd < 300 && event.target !== understood) {
+        if (now - lastTouchEnd < 300 && event.target !== understood && event.target.id !== "dbgHot") {
           event.preventDefault();
         }
         lastTouchEnd = now;
