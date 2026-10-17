@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#003ab1">
+  <meta name="theme-color" content="#8c8c8c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Thông báo">
@@ -25,43 +25,39 @@
       width: 100%;
       height: 100%;
       margin: 0;
-      padding: 0;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
-      background: #003ab1;
+      background: #8c8c8c;
     }
 
     body {
       position: fixed;
       inset: 0;
+      overflow: visible;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
     .app-screen {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      background: #003ab1;
-    }
-
-    /* FIX 15 Pro Max: background luôn lấp đầy đúng khung nhìn.
-       - inset:0 + width/height:100% => khung ảnh = đúng viewport (khớp với
-         window.innerWidth/innerHeight mà JS dùng để đặt toast).
-       - Bỏ left:50% + translateX(-50%) và 100dvh: 2 thứ này có thể lệch nhau
-         giữa các máy/trình duyệt (dvh != innerHeight trong vài ngữ cảnh),
-         gây hiện tượng ảnh lệch và lộ nền. */
-    .background {
-      position: absolute;
-      inset: 0;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: auto;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      object-position: center bottom;
+      overflow: hidden;
+      background: #8c8c8c;
+    }
+
+    .background {
+      position: absolute;
       pointer-events: none;
+      margin: 0;
+      padding: 0;
     }
 
     .toast-wrap {
@@ -77,7 +73,7 @@
     }
 
     .toast-visible .toast-wrap {
-      opacity: 0.95; /* Mờ đi khoảng 5% theo yêu cầu */
+      opacity: 0.95;
       transform: scale(1);
       transition: opacity .28s ease, transform .34s cubic-bezier(.2, .75, .3, 1);
     }
@@ -125,9 +121,9 @@
 </head>
 <body>
   <main class="app-screen" id="appScreen" aria-label="Thông báo toàn màn hình">
-    <img class="background" src="background.png" alt="Nền ứng dụng màu xanh">
+    <img class="background" src="background.png" alt="Nền ứng dụng với vùng trắng ở giữa">
     <section class="toast-wrap" id="toastWrap" aria-label="Nội dung thông báo" aria-hidden="true">
-      <img class="toast-art" src="toast.png" alt="Thẻ thông báo màu xanh đậm">
+      <img class="toast-art" src="toast.png" alt="Thông báo với nút Đã hiểu">
       <button class="understood" id="understood" type="button" aria-label="Đã hiểu" disabled>Đã hiểu</button>
     </section>
   </main>
@@ -146,30 +142,87 @@
       var appScreen = document.getElementById("appScreen");
       var toastWrap = document.getElementById("toastWrap");
       var understood = document.getElementById("understood");
+      var backgroundEl = document.querySelector(".background");
+
+      var isStandalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+      var debugEl = null;
+
+      function getViewportSize() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        if (window.visualViewport) {
+          h = Math.max(h, Math.round(window.visualViewport.height));
+        }
+        if (isStandalone) {
+          // Ở chế độ app (Thêm vào Màn hình chính), khung hiển thị = toàn bộ màn hình.
+          // innerHeight trên iOS có thể thiếu vùng home indicator, nên lấy theo screen.
+          var portrait = window.screen.height >= window.screen.width;
+          var sh = portrait ? window.screen.height : window.screen.width;
+          h = Math.max(h, sh);
+        }
+        return { w: w, h: h };
+      }
 
       function placeToast() {
-        var viewportWidth = window.innerWidth;
-        var viewportHeight = window.innerHeight;
+        var size = getViewportSize();
+        var viewportWidth = size.w;
+        var viewportHeight = size.h;
+
+        // app-screen luôn dính đáy màn hình, cao đúng viewportHeight
+        appScreen.style.height = viewportHeight + "px";
+
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = viewportHeight - displayedHeight;
 
+        // Cạnh dưới background bám sát cạnh dưới app-screen
+        backgroundEl.style.width = displayedWidth + "px";
+        backgroundEl.style.height = displayedHeight + "px";
+        backgroundEl.style.left = offsetX + "px";
+        backgroundEl.style.top = "auto";
+        backgroundEl.style.bottom = "0px";
+
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
         toastWrap.style.width = (WHITE_WIDTH * scale) + "px";
         toastWrap.style.height = (WHITE_HEIGHT * scale) + "px";
+
+        if (/[?&]debug/.test(location.search)) {
+          if (!debugEl) {
+            debugEl = document.createElement("pre");
+            debugEl.style.cssText = "position:fixed;left:6px;top:50px;z-index:99;margin:0;padding:6px;" +
+              "font:11px/1.3 monospace;color:#0f0;background:rgba(0,0,0,.7);pointer-events:none;white-space:pre-wrap";
+            document.body.appendChild(debugEl);
+          }
+          debugEl.textContent =
+            "standalone: " + isStandalone +
+            "\ninner: " + window.innerWidth + "x" + window.innerHeight +
+            "\nvisual: " + (window.visualViewport ? Math.round(window.visualViewport.width) + "x" + Math.round(window.visualViewport.height) : "n/a") +
+            "\nscreen: " + window.screen.width + "x" + window.screen.height +
+            "\nused: " + viewportWidth + "x" + viewportHeight +
+            "\nscale: " + scale.toFixed(4) +
+            "\nbg: " + Math.round(displayedWidth) + "x" + Math.round(displayedHeight);
+        }
       }
 
       placeToast();
       window.addEventListener("resize", placeToast, { passive: true });
       window.addEventListener("orientationchange", placeToast, { passive: true });
-      window.addEventListener("load", placeToast, { passive: true });
-      window.addEventListener("pageshow", placeToast, { passive: true });
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", placeToast, { passive: true });
       }
+      if (window.ResizeObserver) {
+        new ResizeObserver(placeToast).observe(document.documentElement);
+      }
+      window.addEventListener("load", function () {
+        placeToast();
+        window.setTimeout(placeToast, 300);
+        window.setTimeout(placeToast, 1000);
+      }, { passive: true });
+      window.addEventListener("pageshow", placeToast, { passive: true });
 
       function showToast() {
         placeToast();
