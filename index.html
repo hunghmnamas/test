@@ -139,21 +139,22 @@
       var backgroundEl = document.querySelector(".background");
 
       function placeToast() {
-        // Lấy kích thước thực tế của vùng chứa bao gồm cả vùng safe-area
-        var rect = appScreen.getBoundingClientRect();
-        var viewportWidth = rect.width;
-        var viewportHeight = rect.height;
-
+        // Đo theo chính khung hiển thị (body fixed inset:0), không dùng window.innerHeight
+        // vì trên iOS giá trị này có thể nhỏ hơn chiều cao thật (thanh Safari / home indicator).
+        var viewportWidth = appScreen.clientWidth || window.innerWidth;
+        var viewportHeight = appScreen.clientHeight || window.innerHeight;
         var scale = Math.max(viewportWidth / BACKGROUND_WIDTH, viewportHeight / BACKGROUND_HEIGHT);
         var displayedWidth = BACKGROUND_WIDTH * scale;
         var displayedHeight = BACKGROUND_HEIGHT * scale;
         var offsetX = (viewportWidth - displayedWidth) / 2;
         var offsetY = viewportHeight - displayedHeight;
 
+        // Neo cạnh dưới background sát đáy màn hình
         backgroundEl.style.width = displayedWidth + "px";
         backgroundEl.style.height = displayedHeight + "px";
         backgroundEl.style.left = offsetX + "px";
-        backgroundEl.style.top = offsetY + "px";
+        backgroundEl.style.top = "auto";
+        backgroundEl.style.bottom = "0px";
 
         toastWrap.style.left = (offsetX + WHITE_LEFT * scale) + "px";
         toastWrap.style.top = (offsetY + WHITE_TOP * scale) + "px";
@@ -167,6 +168,15 @@
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", placeToast, { passive: true });
       }
+      if (window.ResizeObserver) {
+        new ResizeObserver(placeToast).observe(appScreen);
+      }
+      window.addEventListener("load", function () {
+        placeToast();
+        window.setTimeout(placeToast, 300);
+        window.setTimeout(placeToast, 1000);
+      }, { passive: true });
+      window.addEventListener("pageshow", placeToast, { passive: true });
 
       function showToast() {
         placeToast();
